@@ -1,0 +1,34 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
+    inputs:
+      commit_message:
+        description: 'Commit message for the prod merge'
+        default: 'Merge dev into main for production release'
+        required: true
+
+jobs:
+  deploy-to-prod:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout dev branch
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Set up Git
+        run: |
+          git config user.name 'GitHub Actions'
+          git config user.email 'actions@github.com'
+
+      - name: Merge dev into main
+        run: |
+          git checkout main
+          git pull origin main
+          git merge dev --no-ff -m "${{ github.event.inputs.commit_message }}"
+          git push origin main
+
+      - name: Notify Success
+        run: |
+          echo "✅ Successfully merged dev into main. Production is now updated."
